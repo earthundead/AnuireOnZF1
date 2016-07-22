@@ -1,0 +1,58 @@
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF8">
+	<title>Показ Логфайла</title>
+</head>
+<body>
+
+<?php
+
+	function PrintDescription()
+		{ 
+		$registry = Zend_Registry::getInstance();
+		$dataFilesPath = $registry -> get('dataFilesPath');
+		$Succses=file_exists($dataFilesPath . "/Описание.txt");
+		if($Succses)
+			{
+			$file=fopen($dataFilesPath . "/Описание.txt","r");
+			while (!feof($file)) 
+			    {
+			    $string = fgets($file);
+			    echo "$string <br>";
+			    }
+			}
+		$Succses=fclose($file);
+		}
+
+	function Show()
+		{
+		$registry = Zend_Registry::getInstance();
+		$dataFilesPath = $registry -> get('dataFilesPath');
+		$logfile=$dataFilesPath . "/logfile.log";
+		echo("This prog logfile = $logfile <br>");
+		$Succses=file_exists($logfile);
+		echo("Вывод логфайла. Успех открытия : $Succses.<br>");
+		if($Succses)
+			{
+			echo("Логфайл: <br>");
+			$file=fopen($logfile,"r");
+			while (!feof($file)) 
+			    {
+			    $string = fgets($file);
+			    echo "$string <br>";
+			    }
+			}
+		$Succses=fclose($file);
+		echo("Вывод логфайла. Успех закрытия : $Succses.<br>");
+		echo("Стираем логфайл.<br>");
+		$file=fopen($logfile,"w");
+		echo("Логфайл стёрт.<br>");
+		fclose($file);
+		}
+
+PrintDescription();
+Show();
+?>
+
+</body>
+</html>

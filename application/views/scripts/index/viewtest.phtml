@@ -1,0 +1,30 @@
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF8">
+	<title>Путеводитель тест</title>
+</head>
+<body>
+ZF1 вид PHP скрипт пользователя earthundead, работающий с Bash <br>
+
+<?php
+	echo "<br> Демонстрируем output = `man update-grub`";
+
+	$output = `man update-grub`;
+
+	print "<pre>$output</pre>";
+	$ProgramDir=getcwd();
+	echo "ProgramDir=$ProgramDir";
+	
+if (Zend_Registry::isRegistered('applicationFilesPath'))
+	{
+	$applicationFilesPath = Zend_Registry::get('applicationFilesPath');
+	include_once $applicationFilesPath . "/model/euFunctions.php";
+	$points = getPoints(100,1000);
+	$string = arrayToString($points);
+	echo "<br>" . $string;
+	}
+?>
+
+
+</body>
+</html>
