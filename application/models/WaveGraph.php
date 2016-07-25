@@ -2,17 +2,6 @@
 $Description = "функции для нахождения кратчайшего пути пользователя earthundead";
 Out("Подключены $Description");
 
-$registry = Zend_Registry::getInstance();
-$LocalDB = $registry -> get('programDB');
-$PointsTable=$LocalDB->Get("AnuireLocations");
-$RoadsTable=$LocalDB->Get("Roads");
-
-/*$string = AwesomeToString($PointsTable);
-Out("PointsTable: $string");
-		
-$string = AwesomeToString($RoadsTable);
-Out("RoadsTable: $string");*/
-
 //Немного графов. Дальнейшее требует знания теории графов. (Волны и фронты) 
 //Могут быть огрехи в реализации, но для данного случая они некритичны
 function PrintFront($PrintedFront)
@@ -24,24 +13,196 @@ function PrintFront($PrintedFront)
 	$registry = Zend_Registry::getInstance();
 	$LocalDB = $registry -> get('programDB');
 	
-	Out("CurrFront : id,step,(Name) totalcount = $PointsCount");
+	Out("CurrFront : X,Y,Шаг,Длина(Название локации) totalcount = $PointsCount");
 	for ($i=0; $i<$PointsCount; $i++)
 		{
 		$FrontRow=$PrintedFront[$i];
-		$id=$FrontRow[0];				//Кроме фронта получаем и выводим другую информацию, для удобства восприятия
-		$Name=$LocalDB->Get("AnuireLocations",$id,"Name");	
-		Out("FrontRow : $FrontRow[0],$FrontRow[1],($Name)");
+		
+		//Кроме фронта получаем и выводим другую информацию, для удобства восприятия
+		$x=$FrontRow[0];
+		$y=$FrontRow[1];
+		$id = GetPointID($x,$y);
+		if($id>1)
+			$Name=$LocalDB->Get("AnuireLocations",$id,"Name");	
+		
+		Out("FrontRow : $FrontRow[0],$FrontRow[1],$FrontRow[2],$FrontRow[3],($Name)");
 		}
 	}
 
+//Важная функция. На её свойстве добавлять во фронт только точки с меньшими длинами основана суть алгоритма.
+function AddElementInFront($FrontElement)				
+	{
+	global $Front;//Это плохо, но так проще. Сюда добавляем.
 
+	$X = $FrontElement[0];
+	$Y = $FrontElement[1];
+	$Step = $FrontElement[2];
+	$Lenth = $FrontElement[3];
+	
+	$i=FindPointXYInFront($X,$Y,$Front);
+	if($i<0)
+		$Front[]=$FrontElement;
+	else 	//если точка с таким номером уже есть придётся помучиться и анализировать
+		{
+		$FrontElement=$Front[$i];
+		$OldStep=$FrontElement[2];
+		
+		if($Step<$OldStep)
+			{
+			$FrontElement[2]=$Step;
+			$Front[$i]=$FrontElement;
+			}
+		}
+	}
+	
+function SavePointsFromFront($Front)
+	{
+	global $Front,$AllMatchedPoints;
+	
+	$OldFront=$Front;					//Небольшая рокировка. Лень делать нормально и понятно.
+	$Front=$AllMatchedPoints;
+	
+	$PointsCount=count($OldFront);
+	for ($i=0; $i<$PointsCount; $i++)
+		{
+		$FrontRow=$OldFront[$i];
+		AddElementInFront($FrontRow);
+		}
+		
+	$AllMatchedPoints=$Front;
+	$Front=$OldFront;
+	}
 
+function CreateNewFront($BaseFront)
+	{
+	global $Front,$AllMatchedPoints;
+
+	$Front=NULL;												//Сохраняем и обнуляем фронт
+	
+	$PointsCount=count($BaseFront);
+	for ($i=0; $i<$PointsCount; $i++)							//Перебираем точки старого фронта
+		{
+		$FrontRow=$BaseFront[$i];
+				
+		$CurrPointX=$FrontRow[0];
+		$CurrPointY=$FrontRow[1];
+		$CurrPointLength=$FrontRow[2];
+
+		$NewPoints=GetRoadsTo($CurrPointX,$CurrPointY);	//Получаем список точек, окружающих текущую
+		
+		$NewPointsCount=count($NewPoints);
+		for ($j=0; $j<$NewPointsCount; $j++)					//Перебираем полученное и добавляем, если точка не входит в предыдущий фронт
+			{
+			$NewPoint=$NewPoints[$j];
+			
+			$NewPointX=$NewPoint[0];
+			$NewPointY=$NewPoint[1];
+
+			if(FindPointXYInFront($NewPointX,$NewPointY,$AllMatchedPoints)<0)	//Если не нашли точки в старом фронте
+				AddPointXYInFront($NewPointX,$NewPointY,$CurrPointLength+1);
+			}
+		}
+		
+	//return $Front;
+	}
+	
+function FindWay($Point1ID,$Point2ID)	//Основная функция
+	{
+	global $Front,$OldFront,$AllMatchedPoints;
+	
+	$Point1XY=GetPointXY($Point1ID);
+	Out("Point1XY : $Point1XY[0],$Point1XY[1]");
+	$Point2XY=GetPointXY($Point2ID);
+	Out("Point2XY : $Point2XY[0],$Point2XY[1]");
+
+	$AllMatchedPoints="";
+	$OldFront="";
+	$Front="";
+	$MaxAttemptCount=50;
+	
+	AddPointXYInFront($Point1XY[0],$Point1XY[1],0);
+	PrintFront($Front);
+
+	for ($i=0; $i<$MaxAttemptCount; $i++)
+		{
+		$OldFront=$Front;
+		SavePointsFromFront($Front);
+		CreateNewFront($OldFront);
+		PrintFront($Front);
+		if(FindPointXYInFront($Point2XY[0],$Point2XY[1],$Front)>-1)
+			break;
+		}
+	SavePointsFromFront($Front);
+
+	Out("Окончательно имеем точки и расстояния:");
+	PrintFront($AllMatchedPoints);
+
+	Out("Находим дорогу назад");
+	FindPathBack($Point1XY[0],$Point1XY[1],$Point2XY[0],$Point2XY[1]);
+
+	Out("Найденный путь назад:");
+	PrintFront($Front);
+
+	return $Front;
+	}
+
+function FindPathBack($X1,$Y1,$X2,$Y2)
+	{
+	global $Front,$AllMatchedPoints;
+	$Front=NULL;										//Обнуляем здесь будет результат
+	
+	$i=FindPointXYInFront($X2,$Y2,$AllMatchedPoints);	//Получаем информацию о конечной точке
+	$CurrentPoint=$AllMatchedPoints[$i];				//и Запоминаем
+	AddElementInFront($CurrentPoint);
+	$StepsCount=$CurrentPoint[2];
+	Out("Path StepsCount = $StepsCount, CurrentPoint x = $CurrentPoint[0],CurrentPoint y = $CurrentPoint[1]");
+
+	for ($Step=$StepsCount; $Step>-1; $Step--)
+		{
+		$CurrPointX=$CurrentPoint[0];
+		$CurrPointY=$CurrentPoint[1];				//Получаем информацию о текущей точке	
+		$CurrPointStep=$CurrentPoint[2];
+		
+		$NewPoints=GetRoadsTo($CurrPointX,$CurrPointY);	//Получаем список точек, окружающих текущую
+		
+		$NewPointsCount=count($NewPoints);
+		Out("Path Step = $Step, Количество, найденных точек для перебора = $NewPointsCount");
+		for ($j=0; $j<$NewPointsCount; $j++)			//Перебираем все окружающие точки
+			{
+			$NewPoint=$NewPoints[$j];					//Получаем ещё информацию о новой точке
+			$NewPointX=$NewPoint[0];
+			$NewPointY=$NewPoint[1];
+			
+			$k=FindPointXYInFront($NewPointX,$NewPointY,$AllMatchedPoints);
+			$NewPoint=$AllMatchedPoints[$k];			//Получаем ещё информацию о новой точке
+			
+			$NewPointStep=$NewPoint[2];
+			if($NewPointStep==$CurrPointStep-1)			//Если "шаг" новой точки нас устраивает добавляем её в результат и ищем следующую
+				{
+				AddElementInFront($NewPoint);
+				$CurrentPoint=$NewPoint;
+				break;
+				}
+			}
+
+		if($CurrentPoint[2]!=$Step-1)Out("Path steps error");
+		if($CurrentPoint[2]==0)break;
+		}
+	}
+
+function AddPointXYInFront($PointX,$PointY,$PointStep,$LengthToPoint=1)
+	{
+	$FrontRow=array($PointX,$PointY,$PointStep,$LengthToPoint);
+	AddElementInFront($FrontRow);
+	}
+	
 function GetPointXY($PointID)
 	{
 	$registry = Zend_Registry::getInstance();
 	$LocalDB = $registry -> get('programDB');
 	$PointsTable=$LocalDB->Get("AnuireLocations");
-		
+	
+	$XY = NULL;	
 	$PointsCount=count($PointsTable);
 	for ($i=0; $i<$PointsCount; $i++)
 		{
@@ -53,18 +214,18 @@ function GetPointXY($PointID)
 			$XY[1]=$Row[2];
 			}
 		}
+
 	return $XY;
 	}
 
 function GetPointID($PointX,$PointY)
 	{
-	
 	$registry = Zend_Registry::getInstance();
 	$LocalDB = $registry -> get('programDB');
 	$PointsTable=$LocalDB->Get("AnuireLocations");
-	$RoadsTable=$LocalDB->Get("Roads");
+	//$RoadsTable=$LocalDB->Get("Roads");
 	
-	$id="";
+	$id=NULL;
 	$PointsCount=count($PointsTable);
 	for ($i=0; $i<$PointsCount; $i++)
 		{
@@ -74,6 +235,7 @@ function GetPointID($PointX,$PointY)
 			$id=$Row[0];
 			}
 		}
+
 	return $id;
 	}
 
@@ -82,7 +244,7 @@ function GetRoadsTo($PointX,$PointY)
 	
 	$registry = Zend_Registry::getInstance();
 	$LocalDB = $registry -> get('programDB');
-	$PointsTable=$LocalDB->Get("AnuireLocations");
+	//$PointsTable=$LocalDB->Get("AnuireLocations");
 	$RoadsTable=$LocalDB->Get("Roads");
 	
 	$PointsArray = "";
@@ -102,165 +264,23 @@ function GetRoadsTo($PointX,$PointY)
 	return $PointsArray;
 	}
 
-function FindPointInFront($PointNo,$Front)
+function FindPointXYInFront($PointX,$PointY,$Front)
 	{
+	
 	$Result = -1;
 	$PointsCount = count($Front);
 	for ($i = 0; $i < $PointsCount; $i++)
 		{
 		$FrontRow = $Front[$i];
-		if($FrontRow[0] == $PointNo)
+		
+		if($FrontRow[0] == $PointX && $FrontRow[1] == $PointY)
 			$Result = $i;
 		}
+
 	return $Result;
 	}
 
-function AddPointInFront($PointNo,$LengthToPoint)		//С учётом "веса". Т.е добавляем только меньшие длины
-	{
-	global $Front;						//Это плохо, но так проще. Сюда добавляем.
-	if(!isset($PointNo))
-		return;
-	$FrontRow=array($PointNo,$LengthToPoint);
-	$i=FindPointInFront($PointNo,$Front);
-	if($i<0)$Front[]=$FrontRow;
-	else								//если точка с таким номером уже есть придётся помучиться и анализировать
-		{
-		$FrontRow=$Front[$i];
-		$OldLengthToPoint=$FrontRow[1];
-		if($LengthToPoint<$OldLengthToPoint)
-			{
-			$FrontRow[1]=$LengthToPoint;
-			$Front[$i]=$FrontRow;
-			}
-		}
-	}
-
-function SavePointsFromFront()
-	{
-	global $Front,$AllMatchedPoints;
-	$OldFront=$Front;					//Небольшая рокировка. Лень делать нормально и понятно.
-	$Front=$AllMatchedPoints;
-	$PointsCount=count($OldFront);
-	for ($i=0; $i<$PointsCount; $i++)
-		{
-		$FrontRow=$OldFront[$i];
-		AddPointInFront($FrontRow[0],$FrontRow[1]);
-		}
-	$AllMatchedPoints=$Front;
-	$Front=$OldFront;
-	}
-
-function CreateNewFront()
-	{
-	global $Front,$OldFront,$AllMatchedPoints;
-	SavePointsFromFront();
-	$OldFront=$Front;
-	$Front="";													//Сохраняем и обнуляем фронт
-	$PointsCount=count($OldFront);
-	//Out("PointsCount=$PointsCount");
-	for ($i=0; $i<$PointsCount; $i++)							//Перебираем точки старого фронта
-		{
-		$FrontRow=$OldFront[$i];
-		//Out("FrontRow[0]:". $FrontRow[0]);				
-		$CurrPointID=$FrontRow[0];
-		$CurrPointLength=$FrontRow[1];
-		$CurrPointXY=GetPointXY($CurrPointID);
-		//Out("CurrPointXY:". $CurrPointXY[0],$CurrPointXY[1]);
-		$NewPoints=GetRoadsTo($CurrPointXY[0],$CurrPointXY[1]);	//Получаем список точек, окружающих текущую
-		$NewPointsCount=count($NewPoints);
-		//Out("NewPointsCount=$NewPointsCount");
-		for ($j=0; $j<$NewPointsCount; $j++)					//Перебираем полученное и добавляем, если точка не входит в предыдущий фронт
-			{
-			$NewPoint=$NewPoints[$j];
-			$NewPointX=$NewPoint[0];
-			$NewPointY=$NewPoint[1];
-			$NewPointID=GetPointID($NewPointX,$NewPointY);
-			if($NewPointID>0)
-				if(FindPointInFront($NewPointID,$AllMatchedPoints)<0)	//Если не нашли id точки в старом фронте
-					AddPointInFront($NewPointID,$CurrPointLength+1);
-			}
-		}
-	}
-
-function FindPath($Point1ID,$Point2ID)
-	{
-	global $Front,$AllMatchedPoints;
-	$Front="";											//Обнуляем здесь будет результат
-	$i=FindPointInFront($Point2ID,$AllMatchedPoints);	//Получаем информацию о конечной точке		
-	$CurrentPoint=$AllMatchedPoints[$i];				//и Запоминаем
-	AddPointInFront($CurrentPoint[0],$CurrentPoint[1]);
-	$StepsCount=$CurrentPoint[1];
-	Out("Path StepsCount = $StepsCount, CurrentPoint id = $CurrentPoint[0]");
-
-	for ($Step=$StepsCount; $Step>-1; $Step--)
-		{
-		$CurrPointID=$CurrentPoint[0];					//Получаем информацию о текущей точке	
-		$CurrPointStep=$CurrentPoint[1];
-		$CurrPointXY=GetPointXY($CurrPointID);
-		$CurrPointX=$CurrPointXY[0];
-		$CurrPointY=$CurrPointXY[1];
-		$NewPoints=GetRoadsTo($CurrPointX,$CurrPointY);	//Получаем список точек, окружающих текущую
-		$NewPointsCount=count($NewPoints);
-		Out("Path Step = $Step, Количество, найденных точек для перебора = $NewPointsCount");
-
-		for ($j=0; $j<$NewPointsCount; $j++)			//Перебираем все окружающие точки
-			{
-			$NewPoint=$NewPoints[$j];					//Получаем ещё информацию о новой точке
-			$NewPointX=$NewPoint[0];
-			$NewPointY=$NewPoint[1];
-			$NewPointID=GetPointID($NewPointX,$NewPointY);
-			if($NewPointID<0)Out("PointID error");
-
-			$k=FindPointInFront($NewPointID,$AllMatchedPoints);
-			$NewPoint=$AllMatchedPoints[$k];			//Получаем ещё информацию о новой точке
-			if($NewPointID!=$NewPoint[0])Out("Road Back error");
-			$NewPointStep=$NewPoint[1];
-
-			if($NewPointStep==$CurrPointStep-1)			//Если "шаг" новой точки нас устраивает добавляем её в результат и ищем следующую
-				{
-				AddPointInFront($NewPointID,$NewPointStep);
-				$CurrentPoint=$NewPoint;
-				break;
-				}
-			}
-		if($CurrentPoint[1]!=$Step-1)Out("Path steps error");
-		if($CurrentPoint[1]==0)break;
-		}
-	}
-
-function FindWay($Point1ID,$Point2ID)	//Основная функция
-	{
-	global $Front,$OldFront,$AllMatchedPoints;
-
-	$AllMatchedPoints="";
-	$OldFront="";
-	$Front="";
-	$MaxAttemptCount=50;
-	AddPointInFront($Point1ID,0);
-	PrintFront($Front);
-
-	for ($i=0; $i<$MaxAttemptCount; $i++)
-		{
-		CreateNewFront();
-		PrintFront($Front);
-		if(FindPointInFront($Point2ID,$Front)>-1)
-			break;
-		}
-	SavePointsFromFront();
-
-	Out("Окончательно имеем точки и расстояния:");
-	PrintFront($AllMatchedPoints);
-
-	Out("Находим дорогу назад");
-	FindPath($Point1ID,$Point2ID);
-
-	Out("Найденный путь назад:");
-	PrintFront($Front);
-
-	return $Front;
-	}
-
-function ConstructLines($Front)				//Makes array[2] (pointfrom, pointto) from array[1] (pointslist)
+function ConstructLines($Front)		//Makes array[2] (pointfrom, pointto) from array[1] (pointslist)
 	{
 	$LineId=0;
 	$PointsCount=count($Front);
@@ -268,20 +288,15 @@ function ConstructLines($Front)				//Makes array[2] (pointfrom, pointto) from ar
 		{
 		$FrontPoint=$Front[$i];
 		$NextFrontPoint=$Front[$i-1];
-		$id1=$FrontPoint[0];
-		$id2=$NextFrontPoint[0];
 
-		$CurrPointXY=GetPointXY($id1);
-		$PointX=$CurrPointXY[0];
-		$PointY=$CurrPointXY[1];
-		$NextPointtXY=GetPointXY($id2);
-		$NextPointX=$NextPointtXY[0];
-		$NextPointY=$NextPointtXY[1];
+		$PointX=$FrontPoint[0];
+		$PointY=$FrontPoint[1];
+		$NextPointX=$NextFrontPoint[0];
+		$NextPointY=$NextFrontPoint[1];
 
 		$Line=array($PointX,$PointY,$NextPointX,$NextPointY,$LineId);
-
-		$LineId++;
 		$LinesTable[]=$Line;
+		$LineId++;
 		}
 	return $LinesTable;
 	}

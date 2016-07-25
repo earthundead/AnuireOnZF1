@@ -123,7 +123,9 @@ class Application_Model_ModelInterface
 		for ($i=$PointsCount-1; $i>-1; $i--)
 			{
 			$FrontRow=$Path[$i];
-			$id=$FrontRow[0];
+			$X=$FrontRow[0];
+			$Y=$FrontRow[1];
+			$id = GetPointID($X,$Y);
 			$Name=$this->db->Get("AnuireLocations",$id,"Name");
 			$stringFull=$stringFull . "$Name->";
 			}
