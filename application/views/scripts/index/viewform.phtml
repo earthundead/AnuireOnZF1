@@ -12,9 +12,6 @@
 		$model = Zend_Registry::get('model');
 		$this->form->options = $model->locationsList;
 		array_unshift($this->form->options,"none");
-		$path = $model->pathTextComment;
-		if(isset($path))
-			$this->form->textPathComment = $path;
 		}
 		
 	$this->form->refresh();	

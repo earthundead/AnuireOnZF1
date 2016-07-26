@@ -160,7 +160,7 @@ function FindPathBack($X1,$Y1,$X2,$Y2)
 	for ($Step=$StepsCount; $Step>-1; $Step--)
 		{
 		$CurrPointX=$CurrentPoint[0];
-		$CurrPointY=$CurrentPoint[1];				//Получаем информацию о текущей точке	
+		$CurrPointY=$CurrentPoint[1];					//Получаем информацию о текущей точке	
 		$CurrPointStep=$CurrentPoint[2];
 		
 		$NewPoints=GetRoadsTo($CurrPointX,$CurrPointY);	//Получаем список точек, окружающих текущую
