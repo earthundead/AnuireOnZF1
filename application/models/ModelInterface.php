@@ -97,14 +97,14 @@ class Application_Model_ModelInterface
 		//$images->DrawPoints($PointsTable);
 		$images->DrawNamedPoints($LocationsTable);
 		$images->DrawLines($RoadsTable);
-		$images->DrawText("Anuire Map");
+		//$images->DrawText("Anuire Map");
 		if(isset($this->path))
 			{
 			$PathLines=ConstructLines($this->path);
 			if(isset($PathLines))
 				{
 				$images->DrawArrows($PathLines);
-				$images->DrawText("There is path on map from startPoint to endPoint.",15);			
+				//$images->DrawText("There is path on map from startPoint to endPoint.",15);			
 				}
 			}
 
