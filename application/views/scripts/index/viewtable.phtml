@@ -107,40 +107,13 @@ class TMyTableView
 	public $TableHeader;
 	public $TableNames;
 	}
-	
-//Получаем данные из модели
-$registry = Zend_Registry::getInstance();
-$model = $registry -> get('model');
 
 //Выводим 3 таблицы
 $View1 = new TMyTableView;
-
-$Table=$model->db->Get("AnuireLocations");
-//$Table=$testTable;
-$Header=array("No","X","Y","Название","Описание","Размер");
-$Name="Локации Ануира";
-$Headers[]=$Header;
-$Tables[]=$Table;
-$Names[]=$Name;
-
-$Table=$model->db->Get("RoadsView");
-$Header=array("No","Откуда","Куда");
-$Name="Дороги Ануира";
-$Headers[]=$Header;
-$Tables[]=$Table;
-$Names[]=$Name;
-
-$Table=$model->db->Get("Points");
-$Header=array("No","X","Y","Z");
-$Name="Точки на карте";
-$Headers[]=$Header;
-$Tables[]=$Table;
-$Names[]=$Name;
-
-$View1->DataToView=$Tables;
-$View1->TableHeader=$Headers;
-$View1->TableNames=$Names;
-$View1->Show();
+$View1 -> DataToView  = $this->Tables;
+$View1 -> TableHeader = $this->Headers;
+$View1 -> TableNames  = $this->Names;
+$View1 -> Show();
 ?>
 
 </body>

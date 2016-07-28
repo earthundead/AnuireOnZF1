@@ -24,8 +24,8 @@ class Application_Model_ModelInterface
 	private function init()
 		{
 		$registry = Zend_Registry::getInstance();
-		$this->db = $registry -> get('programDB');
-		$this->locationsList = $this->db->Get("AnuireLocations",-1,"Name");		//Получаем все строки из таблицы локаций с заданным именем колонки
+		$this -> db = $registry -> get('programDB');
+		$this -> locationsList = $this->db->Get("AnuireLocations",-1,"Name");		//Получаем все строки из таблицы локаций с заданным именем колонки
 		}
 
 	public function recreateAllDB()
@@ -35,6 +35,8 @@ class Application_Model_ModelInterface
 	
 	public function refresh()
 		{
+		$this->init();
+		$this->findWay2();
 		$this->redrawPicture();
 		}
 	
@@ -53,9 +55,6 @@ class Application_Model_ModelInterface
 		
 	public function findWay2()
 		{
-		$registry = Zend_Registry::getInstance();
-		$this->startPoint = $registry -> get('startPointId');
-		$this->endPoint = $registry -> get('endPointId');
 			
 		$count = count($this->locationsList);
 		$id1 = $this->startPoint;

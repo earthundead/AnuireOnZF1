@@ -23,7 +23,7 @@ class IndexController extends Zend_Controller_Action {
         {
 	    $request = $this->getRequest();
         $form    = new Application_Form_MainForm();
-        $form->setAction('viewform');
+        $form -> setAction('viewform');
  
         if ($this->getRequest()->isPost()) 
             {
@@ -32,15 +32,19 @@ class IndexController extends Zend_Controller_Action {
 				$values = $form->getValues();
 				$startPointNo  = $values['select1'];
 				$endPointNo  = $values['select2'];
-				$registry = Zend_Registry::getInstance();
-				$registry -> set('startPointId', $startPointNo);	//Здесь id совпадает с номером
-				$registry -> set('endPointId', $endPointNo);
 				
-				$model = $registry -> get('model');
-				$model -> findWay2();
-				$model -> redrawPicture();
+				$registry  = Zend_Registry::getInstance();
+				$programDb = $registry -> get('programDB');	
+				$model     = $registry -> get('model');
 				
-				$form->textAfter = $model->textPathComment;
+				$model -> db = $programDb;
+				$model -> startPoint = $startPointNo;
+				$model -> endPoint = $endPointNo;
+				$model -> refresh();
+				$modelText = $model->textPathComment;
+				
+				if(isset($modelText))
+					$form->textAfter = $modelText;
                 //return $this->_helper->redirector('viewform');
                 }
             }
@@ -48,11 +52,52 @@ class IndexController extends Zend_Controller_Action {
         $this->view->form = $form;
         }
         
-    public function viewtableAction() {
+    public function viewtableAction() 
+    {
+	$registry  = Zend_Registry::getInstance();
+	$programDb = $registry -> get('programDB');	
+	$model     = $registry -> get('model');
+	
+	$model -> db = $programDb;
+	
+	$Table=$model->db->Get("AnuireLocations");
+	$Header=array("No","X","Y","Название","Описание","Размер");
+	$Name="Локации Ануира";
+	$Headers[]=$Header;
+	$Tables[]=$Table;
+	$Names[]=$Name;
 
+	$Table=$model->db->Get("RoadsView");
+	$Header=array("No","Откуда","Куда");
+	$Name="Дороги Ануира";
+	$Headers[]=$Header;
+	$Tables[]=$Table;
+	$Names[]=$Name;
+
+	$Table=$model->db->Get("Points");
+	$Header=array("No","X","Y","Z");
+	$Name="Точки на карте";
+	$Headers[]=$Header;
+	$Tables[]=$Table;
+	$Names[]=$Name;
+	
+	//$view = new Zend_View();
+	$this->view->Tables = $Tables;
+	$this->view->Headers = $Headers;
+	$this->view->Names = $Names;
+	
+	//echo $view->render('viewtable.phtml');
     }
     
-    public function recreatedbAction() {
-
+    public function recreatedbAction() 
+    {
+	$registry  = Zend_Registry::getInstance();
+	$programDb = $registry -> get('programDB');	
+	$model     = $registry -> get('model');
+	
+	echo "Запуск пересоздания БД <br>";
+	$programDb ->RecreateDB();
+	$model -> db = $programDb;
+	echo " БД была пересоздана";
     }
 }
