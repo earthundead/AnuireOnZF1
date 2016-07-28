@@ -7,16 +7,22 @@ class IndexController extends Zend_Controller_Action {
 	{
     }
         
-	public function viewtestAction() {
-
+	public function viewtestAction() 
+	{
+		$registry = Zend_Registry::getInstance();
+		$applicationFilesPath = $registry -> get('applicationFilesPath');
+		$this->view->filesPath = $applicationFilesPath;
     }
         
     public function viewimageAction() {
 
     }
     
-    public function viewlogfileAction() {
-
+    public function viewlogfileAction() 
+    {
+		$registry = Zend_Registry::getInstance();
+		$dataFilesPath = $registry -> get('dataFilesPath');
+		$this->view->filesPath = $dataFilesPath;
     }
     
     public function viewformAction() 

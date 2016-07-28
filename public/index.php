@@ -45,17 +45,6 @@ $logger->info("Default Action is : " . $string);
 
 $application->bootstrap()
             ->run();
-                
-if (Zend_Registry::isRegistered('startPointId'))
-	{
-	$startPointId = Zend_Registry::get('startPointId');
-	$logger->info("Form startPointId : $startPointId");
-	}
-if (Zend_Registry::isRegistered('endPointId'))
-	{
-	$endPointId = Zend_Registry::get('endPointId');
-	$logger->info("Form endPointId : $endPointId");
-	}
-                     
+                                     
 $logger->info("Успешно отработал index.php");
 ?>

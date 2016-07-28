@@ -7,10 +7,8 @@
 
 <?php
 
-	function PrintDescription()
+	function PrintDescription($dataFilesPath)
 		{ 
-		$registry = Zend_Registry::getInstance();
-		$dataFilesPath = $registry -> get('dataFilesPath');
 		$Succses=file_exists($dataFilesPath . "/Описание.txt");
 		if($Succses)
 			{
@@ -24,10 +22,8 @@
 		$Succses=fclose($file);
 		}
 
-	function Show()
+	function Show($dataFilesPath)
 		{
-		$registry = Zend_Registry::getInstance();
-		$dataFilesPath = $registry -> get('dataFilesPath');
 		$logfile=$dataFilesPath . "/logfile.log";
 		echo("This prog logfile = $logfile <br>");
 		$Succses=file_exists($logfile);
@@ -50,8 +46,9 @@
 		fclose($file);
 		}
 
-PrintDescription();
-Show();
+$dataFilesPath = $this->filesPath;
+PrintDescription($dataFilesPath);
+Show($dataFilesPath);
 ?>
 
 </body>

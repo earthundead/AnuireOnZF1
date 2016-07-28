@@ -15,14 +15,12 @@ ZF1 вид PHP скрипт пользователя earthundead, работаю
 	$ProgramDir=getcwd();
 	echo "ProgramDir=$ProgramDir";
 	
-if (Zend_Registry::isRegistered('applicationFilesPath'))
-	{
-	$applicationFilesPath = Zend_Registry::get('applicationFilesPath');
+	$applicationFilesPath = $this->filesPath;
 	include_once $applicationFilesPath . "/model/euFunctions.php";
 	$points = getPoints(100,1000);
 	$string = arrayToString($points);
 	echo "<br>" . $string;
-	}
+
 ?>
 
 
