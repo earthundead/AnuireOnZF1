@@ -17,7 +17,7 @@ $appOptions=APPLICATION_PATH . '/configs/application.ini';			//Опции без
 $application = new Zend_Application(APPLICATION_ENV, $appOptions);
 
 $bootstrap = $application->getBootstrap();
-$registry = Zend_Registry::getInstance();							//Отковыряем и сохраним несколько переменных
+$registry  = Zend_Registry::getInstance();							//Отковыряем и сохраним несколько переменных
 
 $string = $bootstrap->getOption("path");
 $dataFilesPath = $string["data"];

@@ -5,17 +5,8 @@
 </head>
 <body>
 	
-<?php
-	//Получаем данные из модели
-	if (Zend_Registry::isRegistered('model'))
-		{
-		$model = Zend_Registry::get('model');
-		$this->form->options = $model->locationsList;
-		array_unshift($this->form->options,"none");
-		}
-		
-	$this->form->refresh();	
-	echo $this->form;
+<?php	
+echo $this->form;
 ?>
 
 </body>

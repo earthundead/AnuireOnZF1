@@ -6,6 +6,9 @@ class Application_Form_MainForm extends Zend_Form
 	public $textAfter;
 	public $options;
 	
+	public $select1Start;
+	public $select2Start;
+	
     public function init()
 		{
         // Set the method for the display form to POST
@@ -21,12 +24,14 @@ class Application_Form_MainForm extends Zend_Form
 		$element->setRequired(true);
 		$element->setLabel('Начальный пункт:');
 		$element->setDescription('Это город или порт отправления');
+		//$element->setValue("1");
 		$this->addElement($element);
 		
 		$element = new Zend_Form_Element_Select('select2');
 		$element->setRequired(true);
 		$element->setLabel('Конечный пункт:');
 		$element->setDescription('Это город или порт назначения');
+		//$element->setValue("0");
 		$this->addElement($element);
 		
 		$element  = new Zend_Form_Element_Hidden('after');
