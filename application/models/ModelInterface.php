@@ -13,10 +13,13 @@ class Application_Model_ModelInterface
 	public $locationsList;
 	public $startPoint;
 	public $endPoint;
+	//Результаты
 	public $textPathComment;
-	
 	private $path;
+	//модели
 	private $pathFinder;
+	private $imageUnit;
+
 	
 
 	public function Application_Model_ModelInterface()
@@ -61,20 +64,22 @@ class Application_Model_ModelInterface
 			return;
 		if(is_numeric($endPoint))
 			return;
-			
-		$DBid1=$this->db->Find("AnuireLocations","Name=\"$startPoint\""); 	//Получаем id из таблицы локаций с заданным именем
+		
+		//Получаем id из таблицы локаций с заданным именем	
+		$DBid1=$this->db->Find("AnuireLocations","Name=\"$startPoint\"");
 		$DBid2=$this->db->Find("AnuireLocations","Name=\"$endPoint\"");
 
 		if(isset($DBid1)&&isset($DBid2))
 			{
 			$this->startPoint = $DBid1;
 			$this->endPoint   = $DBid2;
-			$this->findWayById();  											//При помощи графов находим путь из начальной точки к конечной
+			$this->findWayById();
 			}
 		}
 		
 	private function findWayById()
 		{
+		//Проверяем исходные данные
 		$startPoint = $this->startPoint;
 		$endPoint   = $this->endPoint;
 		if(! is_numeric($startPoint))
@@ -100,38 +105,41 @@ class Application_Model_ModelInterface
 			Out("Ошибка в нахождении пути. совпадение id локации ($id1 == $id2 )");
 			return;
 			}
-
-		$this -> path = $this -> pathFinder -> FindWay($this->startPoint,$this->endPoint);  				//При помощи графов находим путь из начальной точки к конечной
+			
+		//Получаем координаты начальной и конечной точек используя id
+		$X1=$this->db->Get("AnuireLocations",$id1,"X");
+		$Y1=$this->db->Get("AnuireLocations",$id1,"Y");
+		$X2=$this->db->Get("AnuireLocations",$id2,"X");
+		$Y2=$this->db->Get("AnuireLocations",$id2,"Y");
+		//При помощи графов находим путь из начальной точки к конечной
+		$this -> path = $this -> pathFinder -> FindWay($X1,$Y1,$X2,$Y2);
 		}
 			
 
 	private function redrawPicture()
 		{
-		//Прерисуем и сохраним картинку, отметив маршрут
+		//Соберём данные
 		$img = imagecreate(1100, 1100);
 						
-		$images = new Application_Model_Images;
-		$images -> img = $img;
+		$this->imageUnit = new Application_Model_Images;
+		$this->imageUnit -> img = $img;
 
-		$LocationsTable=$this->db->Get("AnuireLocations");
-		$RoadsTable=$this->db->Get("Roads");
-		$PointsTable=$this->db->Get("Points");
-
-		//$images->DrawPoints($PointsTable);
-		$images->DrawNamedPoints($LocationsTable);
-		$images->DrawLines($RoadsTable);
+		$LocationsTable = $this->db->Get("AnuireLocations");
+		$RoadsTable     = $this->db->Get("Roads");
+		$PointsTable    = $this->db->Get("Points");
 		if(isset($this->path))
-			{
 			$PathLines = $this -> pathFinder -> ConstructLines($this->path);
-			if(isset($PathLines))
-				{
-				$images->DrawArrows($PathLines);		
-				}
-			}
 
-		$images->ImageOut("map");		//Сохраняет на диск если имя файла задано
+		//Прерисуем и сохраним картинку, отметив маршрут
+		//$images->DrawPoints($PointsTable);
+		$this->imageUnit-> DrawNamedPoints($LocationsTable);
+		$this->imageUnit-> DrawLines($RoadsTable);
+		if(isset($PathLines))
+			$this->imageUnit-> DrawArrows($PathLines);		
+		$this->imageUnit-> ImageOut("map");		//Сохраняет на диск если имя файла задано
 		}
-		
+
+
 	private function constructTextComment($Path) //Преревод пути в осмысленную строку содержащую путь
 		{
 		if(!isset($Path))
@@ -147,9 +155,9 @@ class Application_Model_ModelInterface
 			$X=$FrontRow[0];
 			$Y=$FrontRow[1];
 			
-			$id = $this->db->GetLocationID($X,$Y);
-			$Name=$this->db->Get("AnuireLocations",$id,"Name");
-			$stringFull=$stringFull . "$Name->";
+			$id   = $this -> db -> GetLocationID($X,$Y);
+			$Name = $this -> db -> Get("AnuireLocations",$id,"Name");
+			$stringFull = $stringFull . "$Name->";
 			}
 		$stringFull=$stringFull . "Конец путешествия.";
 		

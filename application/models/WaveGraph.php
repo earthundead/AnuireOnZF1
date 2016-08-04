@@ -6,14 +6,16 @@ Out("Подключены $Description");
 //Могут быть огрехи в реализации, но для данного случая они некритичны
 class Application_Model_WaveGraph
 {
+//Исходные данные	
 public $PointsTable;
 public $RoadsTable;
-		
+
+//Глобальные переменные		
 private $Front;
 private $OldFront;
 private $AllMatchedPoints;
 
-//Важная функция. На её свойстве добавлять во фронт только точки с меньшими длинами основана суть алгоритма.
+//На свойстве добавлять во фронт только точки с меньшими длинами основана суть алгоритма.
 private function AddElementInFront($FrontElement)				
 	{
 	//$this->$Front; Это плохо, но так проще. Сюда добавляем.
@@ -47,7 +49,7 @@ private function AddPointXYInFront($PointX,$PointY,$PointStep,$LengthToPoint=1)
 	
 private function SavePointsFromFront($Front)
 	{	
-	$this->OldFront=$this->Front;					//Небольшая рокировка. Лень делать нормально и понятно.
+	$this->OldFront=$this->Front;					//Небольшая рокировка.
 	$this->Front=$this->AllMatchedPoints;
 	
 	$PointsCount=count($this->OldFront);
@@ -63,7 +65,7 @@ private function SavePointsFromFront($Front)
 
 private function CreateNewFront($BaseFront)
 	{
-	$this->Front=NULL;												//Сохраняем и обнуляем фронт
+	$this->Front=NULL;											//Сохраняем и обнуляем фронт
 	
 	$PointsCount=count($BaseFront);
 	for ($i=0; $i<$PointsCount; $i++)							//Перебираем точки старого фронта
@@ -92,19 +94,14 @@ private function CreateNewFront($BaseFront)
 	//return $Front;
 	}
 	
-public function FindWay($Point1ID,$Point2ID)	//Основная функция
+public function FindWay($X1,$Y1,$X2,$Y2)	//Основная функция
 	{
-	$Point1XY=$this->GetPointXY($Point1ID);
-	Out("Point1XY : $Point1XY[0],$Point1XY[1]");
-	$Point2XY=$this->GetPointXY($Point2ID);
-	Out("Point2XY : $Point2XY[0],$Point2XY[1]");
-
 	$this->AllMatchedPoints=null;
 	$this->OldFront=null;
 	$this->Front=null;
 	$MaxAttemptCount=50;
 	
-	$this->AddPointXYInFront($Point1XY[0],$Point1XY[1],0);
+	$this->AddPointXYInFront($X1,$Y1,0);
 	$this->PrintFront($this->Front);
 
 	for ($i=0; $i<$MaxAttemptCount; $i++)
@@ -113,7 +110,7 @@ public function FindWay($Point1ID,$Point2ID)	//Основная функция
 		$this->SavePointsFromFront($this->Front);
 		$this->CreateNewFront($this->OldFront);
 		$this->PrintFront($this->Front);
-		if($this->FindPointXYInFront($Point2XY[0],$Point2XY[1],$Front)>-1)
+		if($this->FindPointXYInFront($X2,$Y2,$Front)>-1)
 			break;
 		}
 	$this->SavePointsFromFront($this->Front);
@@ -122,7 +119,7 @@ public function FindWay($Point1ID,$Point2ID)	//Основная функция
 	$this->PrintFront($this->AllMatchedPoints);
 
 	Out("Находим дорогу назад");
-	$this->FindPathBack($Point1XY[0],$Point1XY[1],$Point2XY[0],$Point2XY[1]);
+	$this->FindPathBack($X1,$Y1,$X2,$Y2);
 
 	Out("Найденный путь назад:");
 	$this->PrintFront($this->Front);
@@ -132,7 +129,7 @@ public function FindWay($Point1ID,$Point2ID)	//Основная функция
 
 private function FindPathBack($X1,$Y1,$X2,$Y2)
 	{
-	$Front=NULL;										//Обнуляем здесь будет результат
+	$Front=null;										//Обнуляем здесь будет результат
 	
 	$i=$this->FindPointXYInFront($X2,$Y2,$this->AllMatchedPoints);	//Получаем информацию о конечной точке
 	$CurrentPoint=$this->AllMatchedPoints[$i];			//и Запоминаем
@@ -171,25 +168,6 @@ private function FindPathBack($X1,$Y1,$X2,$Y2)
 		if($CurrentPoint[2]!=$Step-1)Out("Path steps error");
 		if($CurrentPoint[2]==0)break;
 		}
-	}
-	
-private function GetPointXY($PointID)
-	{
-	
-	$XY = NULL;	
-	$PointsCount=count($this->PointsTable);
-	for ($i=0; $i<$PointsCount; $i++)
-		{
-		$Row = $this->PointsTable[$i];
-		$CurrID = $Row[0];
-		if($CurrID == $PointID)
-			{
-			$XY[0]=$Row[1];
-			$XY[1]=$Row[2];
-			}
-		}
-
-	return $XY;
 	}
 
 private function GetPointName($PointX,$PointY)
