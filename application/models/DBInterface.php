@@ -228,45 +228,6 @@ private function RecreateRoads()
 	//return $Table;
 	}
 
-/*private function RecreateRoadsView1()
-	{
-	Out("Перезагружается таблица RoadsView");
-	$CurrQueryString="DROP VIEW RoadsView";
-	$Sucsses=$this->QueryToDB($CurrQueryString);
-	Out("Успех команды DROP VIEW  = $Sucsses");
-
-	$CurrQueryString=
-	"
-	CREATE VIEW RoadsFrom
-	AS SELECT Roads.id, AnuireLocations.Name
-	FROM	AnuireLocations, Roads
-	WHERE  AnuireLocations.X = Roads.X0 AND AnuireLocations.Y = Roads.Y0
-	ORDER BY Roads.id
-	";
-	$Sucsses=$this->QueryToDB($CurrQueryString);
-	Out("Успех команды CREATE VIEW = $Sucsses");
-	$CurrQueryString=
-	"
-	CREATE VIEW RoadsTo
-	AS SELECT Roads.id, AnuireLocations.Name
-	FROM	AnuireLocations, Roads
-	WHERE  AnuireLocations.X = Roads.X1 AND AnuireLocations.Y = Roads.Y1
-	ORDER BY Roads.id
-	";
-	$Sucsses=$this->QueryToDB($CurrQueryString);
-	Out("Успех команды CREATE VIEW = $Sucsses");
-	$CurrQueryString=
-	"
-	CREATE VIEW RoadsView
-	AS SELECT RoadsFrom.id, RoadsFrom.Name, RoadsTo.Name AS Name2
-	FROM	RoadsFrom, RoadsTo
-	WHERE  RoadsFrom.id = RoadsTo.id
-	ORDER BY RoadsFrom.id
-	";
-	$Sucsses=$this->QueryToDB($CurrQueryString);
-	Out("Успех команды CREATE VIEW = $Sucsses");
-	}*/
-
 private function RecreateRoadsView()
 	{
 	Out("Перезагружается таблица RoadsView");
@@ -500,7 +461,7 @@ public function RecreateDB()
 	}
 
 
-public function Get($FromTable,$Row=-1,$Column="*")		//глобальная функция поиска. лаги. не работает
+public function Get($FromTable,$Row=-1,$Column="*")		//глобальная функция поиска. лаги.
 	{
 	$CurrQueryString=
 	"

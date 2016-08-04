@@ -6,7 +6,7 @@ Out("Подключаем $Description");
 class Application_Model_Images
 {
 public $img;
-//This program
+
 public function GetLocationPoints($Table)
 	{
 	$Count=count($Table);
@@ -41,7 +41,7 @@ public function DrawLocation($X,$Y,$Color="")
 
 public function DrawNamedPoints($Points)
 	{
-	Out("Ссылка на картинку, где будем рисовать: $this->img");
+	Out("Ссылка на картинку, где будем рисовать Локации: $this->img");
 	//Подготовка
 	$white = imagecolorallocate($this->img,255,255,255);
 	$red = imagecolorallocate($this->img,255,0,0);
@@ -76,7 +76,7 @@ public function DrawText($Text,$Indent=0)		//Рисует подпись
 
 public function DrawLines($Lines) //Roads
 	{
-	Out("Ссылка на картинку, где будем рисовать: $this->img");
+	Out("Ссылка на картинку, где будем рисовать линии: $this->img");
 	//allocate some colors
 	$white = imagecolorallocate($this->img,255,255,255);
 	$red = imagecolorallocate($this->img,255,0,0);
@@ -182,18 +182,17 @@ public function ImageOut($Filename = NULL)
 	$registry = Zend_Registry::getInstance();
 	$dataFilesPath 	= $registry -> get('dataFilesPath');
 	$ProgramDir = $dataFilesPath;
-	Out("Ссылка на выводимую картинку: $this->img");
 	
 	if(isset($Filename))
 		{
 		$Succses=imagepng($this->img,"$ProgramDir/$Filename.png");
-		Out("Успех сохранения картинки в файл $Filename.png c помощью png : $Succses");
+		Out("Успех сохранения картинки $this->img в файл $Filename.png c помощью png : $Succses");
 		}
 	else
 		{
 		header('Content-Type: image/png');
 		$Succses=imagepng($this->img);
-		Out("Успех вывода картинки в браузер : $Succses");
+		Out("Успех вывода картинки $this->img в браузер : $Succses");
 		}
 	}
 }
